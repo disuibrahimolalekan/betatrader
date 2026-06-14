@@ -15,8 +15,10 @@ import {
   UserCheck,
   Cpu,
   Info,
-  X
+  X,
+  BarChart2
 } from 'lucide-react';
+import BacktestTab from './BacktestTab.jsx';
 
 function App() {
   // --- 1. STATE DECLARATIONS ---
@@ -30,6 +32,9 @@ function App() {
 
   const cacheRef = useRef(new Map());
   
+  // V2: Top-level tab — 'trader' | 'backtest'
+  const [activeTab, setActiveTab] = useState('trader');
+
   const [activeCategory, setActiveCategory] = useState('forex'); // 'forex' | 'metals' | 'indices' | 'crypto'
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -1033,8 +1038,65 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
         </div>
       </header>
 
-      {/* CORE CONTENT LAYOUT */}
-      <main className="main-layout">
+      {/* V2: TOP-LEVEL TAB NAV */}
+      <nav style={{
+        display: 'flex',
+        gap: '4px',
+        borderBottom: '1px solid var(--border-color)',
+        marginBottom: '4px',
+        paddingBottom: '0',
+      }}>
+        <button
+          id="tab-trader"
+          onClick={() => setActiveTab('trader')}
+          style={{
+            backgroundColor: 'transparent',
+            border: 'none',
+            borderBottom: `2px solid ${activeTab === 'trader' ? 'var(--color-green)' : 'transparent'}`,
+            padding: '12px 20px',
+            fontSize: '13px',
+            fontWeight: '700',
+            cursor: 'pointer',
+            color: activeTab === 'trader' ? 'var(--text-primary)' : 'var(--text-secondary)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '7px',
+            transition: 'color 0.15s',
+          }}
+        >
+          <Cpu size={15} /> TRADER
+        </button>
+        <button
+          id="tab-backtest"
+          onClick={() => setActiveTab('backtest')}
+          style={{
+            backgroundColor: 'transparent',
+            border: 'none',
+            borderBottom: `2px solid ${activeTab === 'backtest' ? 'var(--color-green)' : 'transparent'}`,
+            padding: '12px 20px',
+            fontSize: '13px',
+            fontWeight: '700',
+            cursor: 'pointer',
+            color: activeTab === 'backtest' ? 'var(--text-primary)' : 'var(--text-secondary)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '7px',
+            transition: 'color 0.15s',
+          }}
+        >
+          <BarChart2 size={15} /> BACKTEST
+        </button>
+      </nav>
+
+      {/* V2: BACKTEST TAB */}
+      {activeTab === 'backtest' && (
+        <div style={{ padding: '8px 0' }}>
+          <BacktestTab />
+        </div>
+      )}
+
+      {/* CORE CONTENT LAYOUT (V1 — only shown when activeTab === 'trader') */}
+      {activeTab === 'trader' && <main className="main-layout">
         
         {/* Left Column: Asset Selection & Technical Dashboard */}
         <section className="primary-column">
@@ -1380,7 +1442,7 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
           </section>
         )}
 
-      </main>
+      </main>}
 
       {/* SEQUENTIAL PRE-TRADE CHECKLIST OVERLAY MODAL */}
       {checklistOpen && (
