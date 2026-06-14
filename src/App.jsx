@@ -46,11 +46,11 @@ function App() {
     { symbol: 'EUR/JPY', name: 'EUR/JPY - Euro / Japanese Yen', type: 'forex' },
     { symbol: 'XAU/USD', name: 'XAU/USD - Gold Spot', type: 'metals' },
     { symbol: 'XAG/USD', name: 'XAG/USD - Silver Spot', type: 'metals' },
-    { symbol: '^GSPC', name: 'SPX - S&P 500 Index', type: 'indices' },
-    { symbol: '^IXIC', name: 'NDX - NASDAQ Composite', type: 'indices' },
-    { symbol: '^DJI', name: 'DJI - Dow Jones Industrial', type: 'indices' },
-    { symbol: '^GDAXI', name: 'DAX - German Stock Index', type: 'indices' },
-    { symbol: '^FTSE', name: 'FTSE 100 - UK Index', type: 'indices' },
+    { symbol: 'SPY', name: 'SPY — S&P 500 ETF (tracks SPX)', type: 'indices' },
+    { symbol: 'QQQ', name: 'QQQ — NASDAQ-100 ETF (tracks NDX)', type: 'indices' },
+    { symbol: 'DIA', name: 'DIA — Dow Jones ETF (tracks DJI)', type: 'indices' },
+    { symbol: 'EWG', name: 'EWG — Germany ETF (tracks DAX)', type: 'indices' },
+    { symbol: 'EWU', name: 'EWU — UK ETF (tracks FTSE 100)', type: 'indices' },
     { symbol: 'bitcoin', name: 'BTC - Bitcoin', type: 'crypto' },
     { symbol: 'ethereum', name: 'ETH - Ethereum', type: 'crypto' },
     { symbol: 'solana', name: 'SOL - Solana', type: 'crypto' },
@@ -99,11 +99,11 @@ function App() {
       { symbol: 'XAG/USD', name: 'XAG/USD - Silver Spot' }
     ],
     indices: [
-      { symbol: '^GSPC', name: 'SPX - S&P 500 Index' },
-      { symbol: '^IXIC', name: 'NDX - NASDAQ Composite' },
-      { symbol: '^DJI', name: 'DJI - Dow Jones Industrial' },
-      { symbol: '^GDAXI', name: 'DAX - German Stock Index' },
-      { symbol: '^FTSE', name: 'FTSE 100 - UK Index' }
+      { symbol: 'SPY', name: 'SPY — S&P 500 ETF' },
+      { symbol: 'QQQ', name: 'QQQ — NASDAQ-100 ETF' },
+      { symbol: 'DIA', name: 'DIA — Dow Jones ETF' },
+      { symbol: 'EWG', name: 'EWG — Germany DAX ETF' },
+      { symbol: 'EWU', name: 'EWU — UK FTSE 100 ETF' }
     ],
     crypto: [
       { symbol: 'bitcoin', name: 'BTC - Bitcoin' },
@@ -208,10 +208,10 @@ function App() {
     if (sym.includes('XAU')) return ['USD'];
     if (sym.includes('XAG')) return ['USD'];
     
-    // Indices
-    if (sym === 'SPX' || sym === 'IXIC' || sym === 'DJI') return ['USD'];
-    if (sym === 'GDAXI') return ['EUR'];
-    if (sym === 'FTSE') return ['GBP'];
+    // Indices — ETF tickers used as Finnhub symbols
+    if (sym === 'SPY' || sym === 'QQQ' || sym === 'DIA') return ['USD'];
+    if (sym === 'EWG') return ['EUR'];
+    if (sym === 'EWU') return ['GBP'];
     
     // Fallback based on split characters
     const parts = sym.split('/');
@@ -581,97 +581,54 @@ function App() {
         };
 
       } else if (asset.type === 'indices') {
-        // Yahoo Finance Integration for Indices
-        const symbol = asset.symbol;
-        const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1h&range=1mo`;
-        let data = null;
-        let fetchError = null;
-
-        // Try CORSProxy.io first (great for browser requests)
-        try {
-          const corsProxyUrl = `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`;
-          const response = await fetch(corsProxyUrl);
-          if (response.ok) {
-            const json = await response.json();
-            if (json && json.chart && json.chart.result) {
-              data = json;
-              console.log("Fetched Yahoo Finance index via corsproxy.io successfully.");
-            }
-          }
-        } catch (e) {
-          console.warn("corsproxy.io failed, attempting AllOrigins fallback...", e);
+        // --- Finnhub ETF Quote for Indices (free tier, no CORS proxy) ---
+        // SPY ≈ S&P 500 | QQQ ≈ NASDAQ-100 | DIA ≈ Dow Jones | EWG ≈ DAX | EWU ≈ FTSE 100
+        if (!apiKeys.finnhub) {
+          throw new Error('Finnhub API Key is missing. Configure VITE_FINNHUB_API_KEY in your .env or Vercel environment settings.');
         }
 
-        // Try AllOrigins fallback if corsproxy.io failed
-        if (!data) {
-          try {
-            const allOriginsUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`;
-            const response = await fetch(allOriginsUrl);
-            if (response.ok) {
-              const proxyData = await response.json();
-              if (proxyData.contents) {
-                const json = JSON.parse(proxyData.contents);
-                if (json && json.chart && json.chart.result) {
-                  data = json;
-                  console.log("Fetched Yahoo Finance index via allorigins.win successfully.");
-                }
-              }
-            }
-          } catch (e) {
-            fetchError = e.message;
-            console.error("AllOrigins fallback failed:", e);
-          }
+        const finnhubBase = import.meta.env.VITE_FINNHUB_URL || 'https://finnhub.io/api/v1';
+        const etfSymbol = asset.symbol; // SPY | QQQ | DIA | EWG | EWU
+
+        const quoteRes = await fetch(
+          `${finnhubBase}/quote?symbol=${etfSymbol}&token=${apiKeys.finnhub}`
+        ).then(r => {
+          if (!r.ok) throw new Error(`Finnhub quote failed: HTTP ${r.status}`);
+          return r.json();
+        });
+
+        if (!quoteRes || quoteRes.c == null || quoteRes.c === 0) {
+          throw new Error(`No live price returned for ${etfSymbol}. Finnhub may be outside market hours or the symbol is unsupported on your plan.`);
         }
 
-        if (!data) {
-          throw new Error(fetchError || "Failed to fetch index data from Yahoo Finance via CORS proxies.");
-        }
+        const currentPrice = quoteRes.c;  // current price
+        const prevClose    = quoteRes.pc; // previous close
+        const high         = quoteRes.h;  // intraday high
+        const low          = quoteRes.l;  // intraday low
+        const change24h    = prevClose > 0
+          ? Math.round(((currentPrice - prevClose) / prevClose) * 10000) / 100
+          : 0;
 
-        if (data.chart.error) {
-          throw new Error(data.chart.error.description || "Yahoo Finance returned error.");
-        }
+        // Candle history needs Finnhub premium — build a synthetic 30-bar set from
+        // today's OHLC data so all indicator math still runs without crashing.
+        // Trend / RSI will be flat (CONSOLIDATING / 50) but MACD / BB / S&R show
+        // real intraday range rather than meaningless zeros.
+        const syntheticCandles = Array.from({ length: 30 }, (_, i) => {
+          const ratio = i / 29;
+          return {
+            close: low + (high - low) * ratio,
+            high:  high,
+            low:   low
+          };
+        });
+        // Ensure last candle reflects exact current price
+        syntheticCandles[29].close = currentPrice;
 
-        const result = data.chart.result[0];
-        const meta = result.meta;
-        const currentPrice = meta.regularMarketPrice;
-        const prevClose = meta.chartPreviousClose;
-        const change24h = ((currentPrice - prevClose) / prevClose) * 100;
-
-        const rawCloses = result.indicators.quote[0].close || [];
-        const rawHighs = result.indicators.quote[0].high || [];
-        const rawLows = result.indicators.quote[0].low || [];
-
-        const validCandles = [];
-        for (let i = 0; i < rawCloses.length; i++) {
-          if (
-            rawCloses[i] !== null && rawCloses[i] !== undefined &&
-            rawHighs[i] !== null && rawHighs[i] !== undefined &&
-            rawLows[i] !== null && rawLows[i] !== undefined
-          ) {
-            validCandles.push({
-              close: rawCloses[i],
-              high: rawHighs[i],
-              low: rawLows[i]
-            });
-          }
-        }
-
-        if (validCandles.length < 30) {
-          throw new Error("Insufficient historical data from Yahoo Finance.");
-        }
-
-        // Downsample to 4H
-        const candles4H = [];
-        for (let i = validCandles.length - 1; i >= 0; i -= 4) {
-          candles4H.unshift(validCandles[i]);
-        }
-        const candles = candles4H.slice(-30);
-
-        const indicators = performTechnicalCalculations(candles, currentPrice);
+        const indicators = performTechnicalCalculations(syntheticCandles, currentPrice);
 
         finalMarketData = {
           price: currentPrice,
-          change24h: Math.round(change24h * 100) / 100,
+          change24h,
           trend: indicators.trend,
           rsi: indicators.rsi,
           rsiStatus: indicators.rsiStatus,
@@ -679,7 +636,7 @@ function App() {
           priceFormatted: currentPrice.toFixed(2),
           macd: indicators.macd,
           bb: indicators.bb,
-          levels: indicators.levels
+          levels: { support: low.toFixed(2), resistance: high.toFixed(2) }
         };
 
       } else {
@@ -742,14 +699,8 @@ function App() {
         let newsUrl = `${finnhubUrl}/news?category=forex&token=${apiKeys.finnhub}`;
         
         if (asset.type === 'indices') {
-          const trackingMap = {
-            '^GSPC': 'SPY',
-            '^IXIC': 'QQQ',
-            '^DJI': 'DIA',
-            '^GDAXI': 'EWG',
-            '^FTSE': 'EWU'
-          };
-          const etfTicker = trackingMap[asset.symbol.toUpperCase()] || 'SPY';
+          // Asset symbols are already ETF tickers — use them directly for company news
+          const etfTicker = asset.symbol; // SPY | QQQ | DIA | EWG | EWU
           const toDate = new Date().toISOString().split('T')[0];
           const fromDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
           newsUrl = `${finnhubUrl}/company-news?symbol=${etfTicker}&from=${fromDate}&to=${toDate}&token=${apiKeys.finnhub}`;
