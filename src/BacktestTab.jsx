@@ -855,7 +855,7 @@ const s = {
     fontSize: '18px',
     fontWeight: '800',
     color: 'var(--text-primary)',
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-sans)',
   },
   occRow: {
     display: 'grid',
@@ -1579,10 +1579,10 @@ export default function BacktestTab() {
                 </div>
                 {results.occurrences.map((occ, idx) => (
                   <div key={idx} style={s.occRow}>
-                    <span style={{ color: 'var(--text-secondary)', fontFamily: 'monospace', fontSize: '11px' }}>
+                    <span style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)', fontSize: '11px' }}>
                       {occ.time}
                     </span>
-                    <span style={{ fontFamily: 'monospace', fontWeight: '600' }}>
+                    <span style={{ fontFamily: 'var(--font-sans)', fontWeight: '600' }}>
                       {occ.entryPrice}
                     </span>
                     <span style={{ color: 'var(--color-green)', fontWeight: '700' }}>

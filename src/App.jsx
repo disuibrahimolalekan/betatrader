@@ -16,9 +16,13 @@ import {
   Cpu,
   Info,
   X,
-  BarChart2
+  BarChart2,
+  Sun,
+  Moon
 } from 'lucide-react';
 import BacktestTab from './BacktestTab.jsx';
+import JournalTab from './JournalTab.jsx';
+import { supabase } from './supabaseClient.js';
 
 function App() {
   // --- 1. STATE DECLARATIONS ---
@@ -32,8 +36,41 @@ function App() {
 
   const cacheRef = useRef(new Map());
   
-  // V2: Top-level tab — 'trader' | 'backtest'
+  // V2: Top-level tab — 'trader' | 'backtest' | 'journal'
   const [activeTab, setActiveTab] = useState('trader');
+  const [user, setUser] = useState(null);
+  const [prefilledJournalData, setPrefilledJournalData] = useState(null);
+  
+  // Theme state: default to 'dark'
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('betatrader_theme') || 'dark';
+  });
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (theme === 'light') {
+      root.classList.remove('dark');
+      root.classList.add('light');
+    } else {
+      root.classList.remove('light');
+      root.classList.add('dark');
+    }
+    localStorage.setItem('betatrader_theme', theme);
+  }, [theme]);
+
+  useEffect(() => {
+    // Check current session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const [activeCategory, setActiveCategory] = useState('forex'); // 'forex' | 'metals' | 'indices' | 'crypto'
   const [searchQuery, setSearchQuery] = useState('');
@@ -1034,21 +1071,40 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
         </div>
         
         <div style={styles.headerControls}>
+          <button
+            onClick={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')}
+            style={{
+              backgroundColor: 'var(--bg-secondary)',
+              border: '1px solid var(--border-color)',
+              color: 'var(--text-primary)',
+              width: '36px',
+              height: '36px',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              transition: 'var(--transition-fast)',
+              marginRight: '8px'
+            }}
+            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          >
+            {theme === 'dark' ? (
+              <Sun size={18} color="var(--color-amber)" />
+            ) : (
+              <Moon size={18} color="var(--color-blue)" />
+            )}
+          </button>
           <span style={styles.versionTag}>v1.0.0</span>
         </div>
       </header>
 
       {/* V2: TOP-LEVEL TAB NAV */}
-      <nav style={{
-        display: 'flex',
-        gap: '4px',
-        borderBottom: '1px solid var(--border-color)',
-        marginBottom: '4px',
-        paddingBottom: '0',
-      }}>
+      <nav className="tab-nav">
         <button
           id="tab-trader"
           onClick={() => setActiveTab('trader')}
+          className={activeTab === 'trader' ? 'active' : ''}
           style={{
             backgroundColor: 'transparent',
             border: 'none',
@@ -1069,6 +1125,7 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
         <button
           id="tab-backtest"
           onClick={() => setActiveTab('backtest')}
+          className={activeTab === 'backtest' ? 'active' : ''}
           style={{
             backgroundColor: 'transparent',
             border: 'none',
@@ -1086,12 +1143,46 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
         >
           <BarChart2 size={15} /> BACKTEST
         </button>
+        <button
+          id="tab-journal"
+          onClick={() => setActiveTab('journal')}
+          className={activeTab === 'journal' ? 'active' : ''}
+          style={{
+            backgroundColor: 'transparent',
+            border: 'none',
+            borderBottom: `2px solid ${activeTab === 'journal' ? 'var(--color-green)' : 'transparent'}`,
+            padding: '12px 20px',
+            fontSize: '13px',
+            fontWeight: '700',
+            cursor: 'pointer',
+            color: activeTab === 'journal' ? 'var(--text-primary)' : 'var(--text-secondary)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '7px',
+            transition: 'color 0.15s',
+          }}
+        >
+          <BookOpen size={15} /> JOURNAL
+        </button>
       </nav>
 
       {/* V2: BACKTEST TAB */}
       {activeTab === 'backtest' && (
         <div style={{ padding: '8px 0' }}>
           <BacktestTab />
+        </div>
+      )}
+
+      {/* V3: JOURNAL TAB */}
+      {activeTab === 'journal' && (
+        <div style={{ padding: '8px 0' }}>
+          <JournalTab 
+            user={user} 
+            prefilledData={prefilledJournalData} 
+            clearPrefilledData={() => setPrefilledJournalData(null)}
+            flatSymbolsList={flatSymbolsList}
+            theme={theme}
+          />
         </div>
       )}
 
@@ -1365,6 +1456,83 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
                     <h4 style={styles.verdictSecLabel}>What to Watch</h4>
                     <p style={styles.verdictSecContent}>{aiVerdict.whatToWatch}</p>
                   </div>
+
+                  {/* V3 Checklist Journal Integrator */}
+                  <div style={{
+                    marginTop: '20px',
+                    paddingTop: '16px',
+                    borderTop: '1px solid var(--border-color)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                      <span style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: '600' }}>
+                        Save this pre-trade check to your Journal?
+                      </span>
+                      <button
+                        onClick={() => {
+                          // Calculate checklist score out of 100
+                          let score = 0;
+                          // Q0: Entry reason
+                          if (checklistAnswers[0] === "Clear technical setup" || checklistAnswers[0] === "Both") score += 15;
+                          else if (checklistAnswers[0] === "Fundamental/news catalyst") score += 10;
+                          
+                          // Q1: Trend
+                          if (checklistAnswers[1] === "With the trend") score += 15;
+                          else if (checklistAnswers[1] === "Counter-trend (strong reason)") score += 10;
+                          
+                          // Q2: Stop Loss
+                          if (checklistAnswers[2] === "Defined with exact price") score += 15;
+                          else if (checklistAnswers[2] === "Roughly in mind") score += 5;
+                          
+                          // Q3: Risk/Reward
+                          if (checklistAnswers[3] === "1:2 or better") score += 15;
+                          else if (checklistAnswers[3] === "1:1.5") score += 10;
+                          else if (checklistAnswers[3] === "1:1") score += 5;
+                          
+                          // Q4: Why entry now
+                          if (checklistAnswers[4] === "Setup I've been watching") score += 15;
+                          else if (checklistAnswers[4] === "Just spotted it") score += 8;
+                          else if (checklistAnswers[4] === "Recovering a loss") score += 2;
+                          
+                          // Q5: Upcoming news
+                          if (checklistAnswers[5] === "Checked, nothing major") score += 15;
+                          else if (checklistAnswers[5] === "There's news coming, I'm aware") score += 10;
+                          
+                          // Q6: Account risk
+                          if (checklistAnswers[6] === "1% or less") score += 10;
+                          else if (checklistAnswers[6] === "2%") score += 7;
+                          else if (checklistAnswers[6] === "3-5%") score += 3;
+
+                          setPrefilledJournalData({
+                            asset: selectedAsset.symbol,
+                            direction: tradeDirection,
+                            checklist_score: score,
+                            checklist_verdict: aiVerdict.verdict === 'PROCEED WITH CAUTION' ? 'CAUTION' : aiVerdict.verdict
+                          });
+                          setActiveTab('journal');
+                        }}
+                        style={{
+                          backgroundColor: 'var(--color-green)',
+                          color: 'var(--bg-primary)',
+                          border: 'none',
+                          borderRadius: '6px',
+                          padding: '6px 14px',
+                          fontWeight: '700',
+                          fontSize: '12px',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Yes, Pre-fill Journal
+                      </button>
+                    </div>
+                    {!user && (
+                      <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                        Note: You will need to log in to your Journal account first.
+                      </span>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -1629,7 +1797,7 @@ const styles = {
     borderRadius: '6px',
     fontSize: '12px',
     fontWeight: '700',
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-sans)',
     display: 'flex',
     alignItems: 'center',
   },
@@ -1809,9 +1977,10 @@ const styles = {
     marginTop: '2px',
   },
   currentPrice: {
-    fontSize: '28px',
-    fontWeight: '800',
-    fontFamily: 'monospace',
+    fontSize: '2.2rem',
+    fontWeight: '700',
+    fontFamily: 'var(--font-sans)',
+    letterSpacing: '-0.02em',
   },
   changeBadge: {
     fontSize: '13px',
@@ -2157,7 +2326,7 @@ const styles = {
     fontSize: '13px',
     color: 'var(--color-green)',
     fontWeight: '700',
-    fontFamily: 'monospace',
+    fontFamily: 'var(--font-sans)',
   },
   progressBarBg: {
     width: '100%',
