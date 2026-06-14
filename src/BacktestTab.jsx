@@ -1104,7 +1104,7 @@ export default function BacktestTab() {
         <div style={s.sectionTitle}>Setup Configuration</div>
 
         {/* Row 1: Asset, Timeframe, Direction, Look-ahead */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '14px', marginBottom: '20px' }}>
+        <div className="backtest-config-grid">
           <div style={{ position: 'relative' }} ref={assetBoxRef}>
             <label style={s.label}>Asset</label>
             {/* Searchable combobox */}
@@ -1239,7 +1239,7 @@ export default function BacktestTab() {
         {/* ── CONDITIONS BUILDER ── */}
         <div style={s.sectionTitle}>Conditions Builder</div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 36px', gap: '8px', marginBottom: '8px' }}>
+        <div className="condition-grid-header">
           <span style={{ ...s.label, marginBottom: 0 }}>Indicator</span>
           <span style={{ ...s.label, marginBottom: 0 }}>Operator</span>
           <span style={{ ...s.label, marginBottom: 0 }}>Value</span>
@@ -1250,7 +1250,7 @@ export default function BacktestTab() {
           const ops = getOperatorOptions(cond.indicator);
           const showValue = needsValue(cond.indicator, cond.operator);
           return (
-            <div key={idx} style={s.conditionRow}>
+            <div key={idx} className="condition-row">
               {/* Indicator */}
               <select
                 value={cond.indicator}
@@ -1292,6 +1292,7 @@ export default function BacktestTab() {
               <button
                 onClick={() => removeCondition(idx)}
                 disabled={conditions.length === 1}
+                className="condition-remove-btn"
                 style={{
                   width: '36px',
                   height: '36px',

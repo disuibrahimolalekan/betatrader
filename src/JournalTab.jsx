@@ -17,14 +17,7 @@ function JournalTab({ user, prefilledData, clearPrefilledData, flatSymbolsList =
   // 'log-trade' | 'my-trades' | 'performance'
   const [activeSubTab, setActiveSubTab] = useState('my-trades');
 
-  // --- 2. AUTH FORM STATE ---
-  const [authMode, setAuthMode] = useState('login'); // 'login' | 'signup' | 'forgot'
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [authError, setAuthError] = useState('');
-  const [authSuccess, setAuthSuccess] = useState('');
-  const [loadingAuth, setLoadingAuth] = useState(false);
+
 
   // --- 3. LOG TRADE FORM STATE ---
   const [asset, setAsset] = useState('');
@@ -144,47 +137,7 @@ function JournalTab({ user, prefilledData, clearPrefilledData, flatSymbolsList =
     }
   };
 
-  // --- 6. AUTHENTICATION HANDLERS ---
-  const handleAuthSubmit = async (e) => {
-    e.preventDefault();
-    setAuthError('');
-    setAuthSuccess('');
-    setLoadingAuth(true);
 
-    try {
-      if (authMode === 'login') {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        setAuthSuccess('Welcome back!');
-      } else if (authMode === 'signup') {
-        if (password !== confirmPassword) {
-          throw new Error("Passwords do not match");
-        }
-        const { error } = await supabase.auth.signUp({ email, password });
-        if (error) throw error;
-        setAuthSuccess('Registration successful! Please check your email for confirmation.');
-      } else if (authMode === 'forgot') {
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/`,
-        });
-        if (error) throw error;
-        setAuthSuccess('Password reset email sent. Please check your inbox.');
-      }
-    } catch (err) {
-      setAuthError(err.message || 'An error occurred during authentication');
-    } finally {
-      setLoadingAuth(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-    } catch (err) {
-      console.error('Error logging out:', err);
-    }
-  };
 
   // --- 7. AUTO CALCULATIONS ---
   const detectedAssetType = (symbol) => {
@@ -642,113 +595,8 @@ function JournalTab({ user, prefilledData, clearPrefilledData, flatSymbolsList =
     pnl: Math.round(g.pnl * 100) / 100
   }));
 
-  // Render Login Modal Overlay if not logged in
-  if (!user) {
-    return (
-      <div style={ds.authOverlay}>
-        <div style={ds.authCard} className="animate-scale-in">
-          <div style={ds.authHeader}>
-            <div style={ds.authLogoIcon}>
-              <Lock size={18} color="var(--color-green)" />
-            </div>
-            <div>
-              <h3 style={ds.authTitle}>BetaTrader Journal</h3>
-              <p style={ds.authSubtitle}>Private Supabase Cloud Integration</p>
-            </div>
-          </div>
-
-          <form onSubmit={handleAuthSubmit} style={ds.authBody}>
-            {authError && (
-              <div style={ds.authAlertError}>
-                <AlertTriangle size={15} style={{ flexShrink: 0 }} />
-                <span>{authError}</span>
-              </div>
-            )}
-            {authSuccess && (
-              <div style={ds.authAlertSuccess}>
-                <CheckCircle size={15} style={{ flexShrink: 0 }} />
-                <span>{authSuccess}</span>
-              </div>
-            )}
-
-            <div style={ds.inputGrp}>
-              <label style={ds.label}>Email Address</label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="trader@domain.com"
-                style={ds.input}
-              />
-            </div>
-
-            {authMode !== 'forgot' && (
-              <div style={ds.inputGrp}>
-                <label style={ds.label}>Password</label>
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  style={ds.input}
-                />
-              </div>
-            )}
-
-            {authMode === 'signup' && (
-              <div style={ds.inputGrp}>
-                <label style={ds.label}>Confirm Password</label>
-                <input
-                  type="password"
-                  required
-                  value={confirmPassword}
-                  onChange={e => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••"
-                  style={ds.input}
-                />
-              </div>
-            )}
-
-            <button type="submit" disabled={loadingAuth} style={ds.authBtn}>
-              {loadingAuth ? 'Connecting...' : authMode === 'login' ? 'Log In' : authMode === 'signup' ? 'Create Account' : 'Send Reset Link'}
-            </button>
-          </form>
-
-          <div style={ds.authFooter}>
-            {authMode === 'login' && (
-              <>
-                <button onClick={() => { setAuthMode('signup'); setAuthError(''); }} style={ds.switchBtn}>New trader? Register</button>
-                <button onClick={() => { setAuthMode('forgot'); setAuthError(''); }} style={ds.switchBtn}>Forgot password?</button>
-              </>
-            )}
-            {authMode === 'signup' && (
-              <button onClick={() => { setAuthMode('login'); setAuthError(''); }} style={ds.switchBtn}>Back to Log In</button>
-            )}
-            {authMode === 'forgot' && (
-              <button onClick={() => { setAuthMode('login'); setAuthError(''); }} style={ds.switchBtn}>Back to Log In</button>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div style={ds.journalContainer} className="animate-fade-in">
-      
-      {/* Top Banner Auth Bar */}
-      <div style={ds.userBar}>
-        <div style={ds.userBarInfo}>
-          <div style={ds.activeDot} />
-          <span style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-secondary)' }}>Logged in as: </span>
-          <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--color-green)', marginLeft: '4px' }}>{user.email}</span>
-        </div>
-        <button onClick={handleLogout} style={ds.logoutBtn}>
-          <LogOut size={13} /> Log Out
-        </button>
-      </div>
 
       {/* Navigation Headers */}
       <div style={ds.subTabsNav}>
