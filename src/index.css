@@ -637,3 +637,52 @@ label, .label, .mini-label, .verdict-badge, .status-badge, .direction-badge {
     padding: 12px;
   }
 }
+
+
+/* Journal tab grids */
+.journal-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.journal-expanded-grid {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 24px;
+}
+
+.journal-highlight-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.journal-charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  .journal-charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .journal-form-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .journal-expanded-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .journal-highlight-row {
+    grid-template-columns: 1fr;
+  }
+}

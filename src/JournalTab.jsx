@@ -665,7 +665,7 @@ function JournalTab({ user, prefilledData, clearPrefilledData, flatSymbolsList =
             </div>
           )}
 
-          <div style={ds.formGrid}>
+          <div className="journal-form-grid">
             <div style={ds.formColumn}>
               {/* Asset Autocomplete */}
               <div style={ds.inputGrp}>
@@ -1136,7 +1136,7 @@ function JournalTab({ user, prefilledData, clearPrefilledData, flatSymbolsList =
                     {/* Expanded Content Drawer */}
                     {isExpanded && (
                       <div style={ds.expandedContent} className="animate-fade-in">
-                        <div style={ds.expandedGrid}>
+                        <div className="journal-expanded-grid">
                           <div style={ds.expandedDetailCol}>
                             <h4 style={ds.subSectionHeading}>Trade Parameters</h4>
                             <div style={ds.detailGrid}>
@@ -1282,7 +1282,7 @@ function JournalTab({ user, prefilledData, clearPrefilledData, flatSymbolsList =
               </div>
 
               {/* Best & Worst Trades Highlight Box */}
-              <div style={ds.highlightRow}>
+              <div className="journal-highlight-row">
                 {bestTrade && (
                   <div style={{ ...ds.highlightCard, borderLeftColor: 'var(--color-green)' }}>
                     <div style={ds.highlightTitle}>
@@ -1321,7 +1321,7 @@ function JournalTab({ user, prefilledData, clearPrefilledData, flatSymbolsList =
               </div>
 
               {/* Charts Section */}
-              <div style={ds.chartsGrid}>
+              <div className="journal-charts-grid">
                 
                 {/* 1. Equity Curve Chart */}
                 <div style={ds.chartCard}>
@@ -1493,6 +1493,7 @@ const ds = {
     display: 'flex',
     flexDirection: 'column',
     gap: '20px',
+    width: '100%',
   },
   userBar: {
     display: 'flex',
@@ -1565,15 +1566,7 @@ const ds = {
     letterSpacing: '0.05em',
     textTransform: 'uppercase',
   },
-  formGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '24px',
-    '@media (max-width: 768px)': {
-      gridTemplateColumns: '1fr',
-      gap: '16px'
-    }
-  },
+
   formColumn: {
     display: 'flex',
     flexDirection: 'column',
@@ -1930,14 +1923,7 @@ const ds = {
     backgroundColor: 'var(--bg-primary)',
     padding: '18px 24px',
   },
-  expandedGrid: {
-    display: 'grid',
-    gridTemplateColumns: '3fr 2fr',
-    gap: '24px',
-    '@media (max-width: 768px)': {
-      gridTemplateColumns: '1fr'
-    }
-  },
+
   expandedDetailCol: {
     display: 'flex',
     flexDirection: 'column',
@@ -2084,14 +2070,7 @@ const ds = {
     fontWeight: '800',
     fontFamily: 'var(--font-sans)',
   },
-  highlightRow: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '16px',
-    '@media (max-width: 600px)': {
-      gridTemplateColumns: '1fr'
-    }
-  },
+
   highlightCard: {
     backgroundColor: 'var(--bg-secondary)',
     border: '1px solid var(--border-color)',
@@ -2111,14 +2090,7 @@ const ds = {
   highlightBody: {
     marginTop: '8px',
   },
-  chartsGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '20px',
-    '@media (max-width: 900px)': {
-      gridTemplateColumns: '1fr'
-    }
-  },
+
   chartCard: {
     backgroundColor: 'var(--bg-secondary)',
     border: '1px solid var(--border-color)',

@@ -774,6 +774,8 @@ const s = {
     border: '1px solid var(--border-color)',
     borderRadius: '12px',
     padding: '20px',
+    minWidth: 0,
+    overflow: 'hidden',
   },
   label: {
     fontSize: '11px',
@@ -1063,7 +1065,7 @@ export default function BacktestTab() {
 
   // ── Render ──
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '900px', margin: '0 auto' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '900px', margin: '0 auto', width: '100%' }}>
 
       {/* ── HEADER ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1560,7 +1562,7 @@ export default function BacktestTab() {
             </button>
 
             {expandOccurrences && (
-              <div style={{ marginTop: '12px', overflowX: 'auto' }}>
+              <div style={{ marginTop: '12px', overflowX: 'auto', width: '100%', maxWidth: '100%', display: 'block' }}>
                 {/* Header row */}
                 <div style={{
                   ...s.occRow,
