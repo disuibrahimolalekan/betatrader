@@ -20,14 +20,14 @@ import {
 
 function App() {
   // --- 1. STATE DECLARATIONS ---
-  const [apiKeys, setApiKeys] = useState({
+  // --- 1. CONFIGURATION & KEYS ---
+  const apiKeys = {
     twelveData: import.meta.env.VITE_TWELVEDATA_API_KEY || '',
     groq: import.meta.env.VITE_GROQ_API_KEY || '',
     finnhub: import.meta.env.VITE_FINNHUB_API_KEY || '',
     cryptoPanic: import.meta.env.VITE_CRYPTOPANIC_API_KEY || ''
-  });
-  
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  };
+
   const [demoMode, setDemoMode] = useState(true);
   const [activeCategory, setActiveCategory] = useState('forex'); // 'forex' | 'metals' | 'indices' | 'crypto'
   const [searchQuery, setSearchQuery] = useState('');
@@ -997,80 +997,9 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
             Demo Mode: {demoMode ? 'ON' : 'OFF'}
           </button>
           
-          <button 
-            onClick={() => setSettingsOpen(true)} 
-            style={styles.settingsBtn}
-          >
-            <Settings size={18} />
-          </button>
+          <span style={styles.versionTag}>v1.0.0</span>
         </div>
       </header>
-
-      {/* SETTINGS DRAWER OVERLAY */}
-      {settingsOpen && (
-        <div style={styles.modalOverlay}>
-          <div style={{ ...styles.modalContent, ...styles.settingsModal }} className="animate-scale-in">
-            <div style={styles.modalHeader}>
-              <h3 style={styles.modalTitle}>API Configuration</h3>
-              <button onClick={() => setSettingsOpen(false)} style={styles.closeBtn}>
-                <X size={18} />
-              </button>
-            </div>
-            
-            <div style={styles.modalBody}>
-              <div style={styles.inputGroup}>
-                <label style={styles.inputLabel}>Twelve Data API Key</label>
-                <input 
-                  type="password" 
-                  value={apiKeys.twelveData} 
-                  onChange={(e) => setApiKeys({ ...apiKeys, twelveData: e.target.value })}
-                  placeholder="Twelve Data API Key" 
-                  style={styles.textInput}
-                />
-              </div>
-
-              <div style={styles.inputGroup}>
-                <label style={styles.inputLabel}>Groq API Key</label>
-                <input 
-                  type="password" 
-                  value={apiKeys.groq} 
-                  onChange={(e) => setApiKeys({ ...apiKeys, groq: e.target.value })}
-                  placeholder="Groq API Key" 
-                  style={styles.textInput}
-                />
-              </div>
-
-              <div style={styles.inputGroup}>
-                <label style={styles.inputLabel}>Finnhub API Key</label>
-                <input 
-                  type="password" 
-                  value={apiKeys.finnhub} 
-                  onChange={(e) => setApiKeys({ ...apiKeys, finnhub: e.target.value })}
-                  placeholder="Finnhub API Key" 
-                  style={styles.textInput}
-                />
-              </div>
-
-              <div style={styles.inputGroup}>
-                <label style={styles.inputLabel}>CryptoPanic API Key</label>
-                <input 
-                  type="password" 
-                  value={apiKeys.cryptoPanic} 
-                  onChange={(e) => setApiKeys({ ...apiKeys, cryptoPanic: e.target.value })}
-                  placeholder="CryptoPanic API Key" 
-                  style={styles.textInput}
-                />
-              </div>
-            </div>
-
-            <div style={styles.modalFooter}>
-              <button onClick={() => setSettingsOpen(false)} style={styles.primaryBtn}>
-                Save Settings
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* CORE CONTENT LAYOUT */}
       <main style={styles.mainLayout}>
@@ -1561,18 +1490,17 @@ const styles = {
     height: '8px',
     borderRadius: '50%',
   },
-  settingsBtn: {
+  versionTag: {
     backgroundColor: 'var(--bg-secondary)',
     border: '1px solid var(--border-color)',
-    color: 'var(--text-primary)',
-    width: '38px',
-    height: '38px',
+    color: 'var(--text-secondary)',
+    padding: '8px 14px',
     borderRadius: '6px',
+    fontSize: '12px',
+    fontWeight: '700',
+    fontFamily: 'monospace',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    transition: 'var(--transition-fast)',
   },
   mainLayout: {
     display: 'flex',
