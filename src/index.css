@@ -1,4 +1,4 @@
-/* Forex Edge Global Stylesheet */
+/* Forex Edge / BetaTrader Global Stylesheet */
 :root {
   --bg-primary: #0A0E1A;
   --bg-secondary: #12182B;
@@ -60,14 +60,6 @@ body {
   background: var(--bg-tertiary);
 }
 
-/* Base Styles */
-#root {
-  width: 100%;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
 /* Micro-animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
@@ -75,14 +67,8 @@ body {
 }
 
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.95); }
+  from { opacity: 0; transform: scale(0.97); }
   to { opacity: 1; transform: scale(1); }
-}
-
-@keyframes pulseBorder {
-  0% { border-color: var(--border-color); }
-  50% { border-color: var(--color-blue); }
-  100% { border-color: var(--border-color); }
 }
 
 .animate-fade-in {
@@ -91,4 +77,135 @@ body {
 
 .animate-scale-in {
   animation: scaleIn var(--transition-fast) forwards;
+}
+
+/* Layout System Classes for Mobile Responsiveness */
+.app-container {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-height: 100vh;
+}
+
+.main-layout {
+  display: flex;
+  flex-direction: row;
+  gap: 24px;
+  width: 100%;
+}
+
+.primary-column {
+  flex: 2;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.secondary-column {
+  flex: 1;
+  min-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  position: relative;
+}
+
+.assets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.indicators-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.advanced-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.modal-content {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+}
+
+/* Premium Mobile Overrides */
+@media (max-width: 768px) {
+  .app-container {
+    padding: 16px 12px;
+    gap: 16px;
+  }
+
+  .main-layout {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .primary-column {
+    width: 100%;
+  }
+
+  .secondary-column {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .card {
+    padding: 16px 14px;
+  }
+
+  .modal-content {
+    max-height: 100vh;
+    height: 100%;
+    border-radius: 0;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .assets-grid {
+    grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+    gap: 8px;
+  }
+
+  .indicators-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .advanced-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 12px;
+  }
 }

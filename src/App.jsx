@@ -28,14 +28,35 @@ function App() {
     cryptoPanic: import.meta.env.VITE_CRYPTOPANIC_API_KEY || ''
   };
 
-  const [demoMode, setDemoMode] = useState(true);
+  const cacheRef = useRef(new Map());
+  
   const [activeCategory, setActiveCategory] = useState('forex'); // 'forex' | 'metals' | 'indices' | 'crypto'
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   
-  // Flattened combined list for search autocomplete
-  const [flatSymbolsList, setFlatSymbolsList] = useState([]);
-  const [symbolsLoaded, setSymbolsLoaded] = useState(false);
+  // Flattened combined list for search autocomplete (Task 8: initialized with default items)
+  const [flatSymbolsList, setFlatSymbolsList] = useState([
+    { symbol: 'EUR/USD', name: 'EUR/USD - Euro / US Dollar', type: 'forex' },
+    { symbol: 'USD/JPY', name: 'USD/JPY - US Dollar / Japanese Yen', type: 'forex' },
+    { symbol: 'GBP/USD', name: 'GBP/USD - British Pound / US Dollar', type: 'forex' },
+    { symbol: 'AUD/USD', name: 'AUD/USD - Australian Dollar / US Dollar', type: 'forex' },
+    { symbol: 'USD/CAD', name: 'USD/CAD - US Dollar / Canadian Dollar', type: 'forex' },
+    { symbol: 'USD/CHF', name: 'USD/CHF - US Dollar / Swiss Franc', type: 'forex' },
+    { symbol: 'GBP/JPY', name: 'GBP/JPY - British Pound / Japanese Yen', type: 'forex' },
+    { symbol: 'EUR/JPY', name: 'EUR/JPY - Euro / Japanese Yen', type: 'forex' },
+    { symbol: 'XAU/USD', name: 'XAU/USD - Gold Spot', type: 'metals' },
+    { symbol: 'XAG/USD', name: 'XAG/USD - Silver Spot', type: 'metals' },
+    { symbol: '^GSPC', name: 'SPX - S&P 500 Index', type: 'indices' },
+    { symbol: '^IXIC', name: 'NDX - NASDAQ Composite', type: 'indices' },
+    { symbol: '^DJI', name: 'DJI - Dow Jones Industrial', type: 'indices' },
+    { symbol: '^GDAXI', name: 'DAX - German Stock Index', type: 'indices' },
+    { symbol: '^FTSE', name: 'FTSE 100 - UK Index', type: 'indices' },
+    { symbol: 'bitcoin', name: 'BTC - Bitcoin', type: 'crypto' },
+    { symbol: 'ethereum', name: 'ETH - Ethereum', type: 'crypto' },
+    { symbol: 'solana', name: 'SOL - Solana', type: 'crypto' },
+    { symbol: 'binancecoin', name: 'BNB - Binance Coin', type: 'crypto' }
+  ]);
+  const [symbolsLoaded, setSymbolsLoaded] = useState(true);
   
   const [selectedAsset, setSelectedAsset] = useState(null); 
   const [marketData, setMarketData] = useState(null); 
@@ -78,11 +99,11 @@ function App() {
       { symbol: 'XAG/USD', name: 'XAG/USD - Silver Spot' }
     ],
     indices: [
-      { symbol: 'SPX', name: 'SPX - S&P 500 Index' },
-      { symbol: 'IXIC', name: 'NDX - NASDAQ Composite' },
-      { symbol: 'DJI', name: 'DJI - Dow Jones Industrial' },
-      { symbol: 'GDAXI', name: 'DAX - German Stock Index' },
-      { symbol: 'FTSE', name: 'FTSE 100 - UK Index' }
+      { symbol: '^GSPC', name: 'SPX - S&P 500 Index' },
+      { symbol: '^IXIC', name: 'NDX - NASDAQ Composite' },
+      { symbol: '^DJI', name: 'DJI - Dow Jones Industrial' },
+      { symbol: '^GDAXI', name: 'DAX - German Stock Index' },
+      { symbol: '^FTSE', name: 'FTSE 100 - UK Index' }
     ],
     crypto: [
       { symbol: 'bitcoin', name: 'BTC - Bitcoin' },
@@ -199,10 +220,10 @@ function App() {
   };
 
   // --- 5. EFFECT HOOKS ---
-  // Load symbols once Twelve Data key is configured or Demo Mode is toggled
+  // Load symbols once Twelve Data key is configured
   useEffect(() => {
     loadSymbolsDirectory();
-  }, [apiKeys.twelveData, demoMode]);
+  }, [apiKeys.twelveData]);
 
   // Fetch asset data when selectedAsset changes
   useEffect(() => {
@@ -246,8 +267,7 @@ function App() {
 
   // --- 6. SYMBOL DISCOVERY IMPLEMENTATION (Section 10B) ---
   const loadSymbolsDirectory = async () => {
-    if (demoMode) {
-      // Build dummy searchable lists for autocompletion
+    if (!apiKeys.twelveData) {
       const combined = [
         ...quickAssets.forex.map(x => ({ ...x, type: 'forex' })),
         ...quickAssets.metals.map(x => ({ ...x, type: 'metals' })),
@@ -260,12 +280,6 @@ function App() {
       ];
       setFlatSymbolsList(combined);
       setSymbolsLoaded(true);
-      return;
-    }
-
-    if (!apiKeys.twelveData) {
-      setFlatSymbolsList([]);
-      setSymbolsLoaded(false);
       return;
     }
 
@@ -336,12 +350,14 @@ function App() {
         rsi: 50,
         rsiStatus: 'Neutral',
         trend: 'CONSOLIDATING',
-        signal: 'STAY OUT — Insufficient candle data for indicator calculations'
+        signal: 'STAY OUT — Insufficient candle data for indicator calculations',
+        macd: { line: '0.00', signal: '0.00', hist: '0.00' },
+        bb: { middle: '0.00', upper: '0.00', lower: '0.00' },
+        levels: { support: '0.00', resistance: '0.00' }
       };
     }
 
     // Extract close prices. Order must be oldest to newest.
-    // If it's Twelve Data, we reversed it before passing, so index 0 is oldest, 29 is newest.
     const closePrices = candlesData.map(c => parseFloat(c.close));
     const len = closePrices.length;
 
@@ -427,13 +443,71 @@ function App() {
       }
     }
 
+    // E. Calculate MACD (12, 26, 9)
+    const calculateEMA = (prices, period) => {
+      const k = 2 / (period + 1);
+      const ema = [];
+      if (prices.length === 0) return ema;
+      ema[0] = prices[0];
+      for (let i = 1; i < prices.length; i++) {
+        ema[i] = prices[i] * k + ema[i - 1] * (1 - k);
+      }
+      return ema;
+    };
+
+    const ema12 = calculateEMA(closePrices, 12);
+    const ema26 = calculateEMA(closePrices, 26);
+    const macdLine = [];
+    for (let i = 0; i < len; i++) {
+      macdLine.push(ema12[i] - ema26[i]);
+    }
+    const signalLine = calculateEMA(macdLine, 9);
+    
+    const latestMACD = macdLine[len - 1];
+    const latestSignal = signalLine[len - 1];
+    const latestHist = latestMACD - latestSignal;
+
+    // F. Calculate Bollinger Bands (20, 2)
+    const closes20 = closePrices.slice(-20);
+    const bbMiddle = currentSMA;
+    const variance = closes20.reduce((sum, val) => sum + Math.pow(val - bbMiddle, 2), 0) / 20;
+    const stdDev = Math.sqrt(variance);
+    const bbUpper = bbMiddle + 2 * stdDev;
+    const bbLower = bbMiddle - 2 * stdDev;
+
+    // G. Support & Resistance (30-candle window highs/lows)
+    const highPrices = candlesData.map(c => c.high !== undefined ? parseFloat(c.high) : parseFloat(c.close));
+    const lowPrices = candlesData.map(c => c.low !== undefined ? parseFloat(c.low) : parseFloat(c.close));
+    
+    const resistance = Math.max(...highPrices.filter(v => !isNaN(v)));
+    const support = Math.min(...lowPrices.filter(v => !isNaN(v)));
+
+    // Decimals formatter helper based on price/instrument
+    const isForex = currentPrice < 5;
+    const isJpy = currentPrice > 100 && currentPrice < 200;
+    const dec = isJpy ? 3 : isForex ? 4 : 2;
+
     return {
       price: currentPrice,
       sma20: Math.round(currentSMA * 10000) / 10000,
       rsi,
       rsiStatus,
       trend,
-      signal
+      signal,
+      macd: {
+        line: latestMACD.toFixed(dec),
+        signal: latestSignal.toFixed(dec),
+        hist: latestHist.toFixed(dec)
+      },
+      bb: {
+        middle: bbMiddle.toFixed(dec),
+        upper: bbUpper.toFixed(dec),
+        lower: bbLower.toFixed(dec)
+      },
+      levels: {
+        support: support.toFixed(dec),
+        resistance: resistance.toFixed(dec)
+      }
     };
   };
 
@@ -441,25 +515,30 @@ function App() {
   const fetchAssetData = async (asset) => {
     setLoadingData(true);
     setError(null);
+
+    // Caching check
+    const cached = cacheRef.current.get(asset.symbol);
+    if (cached && Date.now() - cached.timestamp < 60000) {
+      console.log(`Using cached data for ${asset.symbol}`);
+      setMarketData(cached.data.marketData);
+      setRecentNews(cached.data.recentNews);
+      setUpcomingEvents(cached.data.upcomingEvents);
+      setLoadingData(false);
+      return;
+    }
+
     setMarketData(null);
     setRecentNews([]);
     setUpcomingEvents([]);
 
     try {
-      if (demoMode) {
-        await simulateMarketData(asset);
-        return;
-      }
-
-      // Check required key
-      if (asset.type !== 'crypto' && !apiKeys.twelveData) {
-        throw new Error("Twelve Data API Key is missing. Configure it in the Settings panel.");
-      }
+      let finalMarketData = null;
+      let finalNews = [];
+      let finalEvents = [];
 
       // 8.1 Fetch Price & Time Series in parallel
       if (asset.type === 'crypto') {
         const coinGeckoUrl = import.meta.env.VITE_COINGECKO_URL || 'https://api.coingecko.com/api/v3';
-        // CoinGecko calls (Price + 7 days OHLC for candles)
         const priceUrl = `${coinGeckoUrl}/simple/price?ids=${asset.symbol}&vs_currencies=usd&include_24hr_change=true`;
         const ohlcUrl = `${coinGeckoUrl}/coins/${asset.symbol}/ohlc?vs_currency=usd&days=7`;
 
@@ -480,28 +559,135 @@ function App() {
         const currentPrice = priceInfo.usd;
         const change24h = Math.round(priceInfo.usd_24h_change * 100) / 100;
 
-        // Convert CoinGecko OHLC [time, open, high, low, close] to standard candle format
-        // CoinGecko returns them oldest to newest, which is chronological.
-        // Let's slice the last 30 candles
         const candles = ohlcRes.slice(-30).map(candle => ({
-          close: parseFloat(candle[4])
+          close: parseFloat(candle[4]),
+          high: parseFloat(candle[2]),
+          low: parseFloat(candle[3])
         }));
 
         const indicators = performTechnicalCalculations(candles, currentPrice);
 
-        setMarketData({
+        finalMarketData = {
           price: currentPrice,
           change24h,
           trend: indicators.trend,
           rsi: indicators.rsi,
           rsiStatus: indicators.rsiStatus,
           signal: indicators.signal,
-          priceFormatted: currentPrice.toFixed(2)
-        });
+          priceFormatted: currentPrice.toFixed(2),
+          macd: indicators.macd,
+          bb: indicators.bb,
+          levels: indicators.levels
+        };
+
+      } else if (asset.type === 'indices') {
+        // Yahoo Finance Integration for Indices
+        const symbol = asset.symbol;
+        const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1h&range=1mo`;
+        let data = null;
+        let fetchError = null;
+
+        // Try CORSProxy.io first (great for browser requests)
+        try {
+          const corsProxyUrl = `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`;
+          const response = await fetch(corsProxyUrl);
+          if (response.ok) {
+            const json = await response.json();
+            if (json && json.chart && json.chart.result) {
+              data = json;
+              console.log("Fetched Yahoo Finance index via corsproxy.io successfully.");
+            }
+          }
+        } catch (e) {
+          console.warn("corsproxy.io failed, attempting AllOrigins fallback...", e);
+        }
+
+        // Try AllOrigins fallback if corsproxy.io failed
+        if (!data) {
+          try {
+            const allOriginsUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`;
+            const response = await fetch(allOriginsUrl);
+            if (response.ok) {
+              const proxyData = await response.json();
+              if (proxyData.contents) {
+                const json = JSON.parse(proxyData.contents);
+                if (json && json.chart && json.chart.result) {
+                  data = json;
+                  console.log("Fetched Yahoo Finance index via allorigins.win successfully.");
+                }
+              }
+            }
+          } catch (e) {
+            fetchError = e.message;
+            console.error("AllOrigins fallback failed:", e);
+          }
+        }
+
+        if (!data) {
+          throw new Error(fetchError || "Failed to fetch index data from Yahoo Finance via CORS proxies.");
+        }
+
+        if (data.chart.error) {
+          throw new Error(data.chart.error.description || "Yahoo Finance returned error.");
+        }
+
+        const result = data.chart.result[0];
+        const meta = result.meta;
+        const currentPrice = meta.regularMarketPrice;
+        const prevClose = meta.chartPreviousClose;
+        const change24h = ((currentPrice - prevClose) / prevClose) * 100;
+
+        const rawCloses = result.indicators.quote[0].close || [];
+        const rawHighs = result.indicators.quote[0].high || [];
+        const rawLows = result.indicators.quote[0].low || [];
+
+        const validCandles = [];
+        for (let i = 0; i < rawCloses.length; i++) {
+          if (
+            rawCloses[i] !== null && rawCloses[i] !== undefined &&
+            rawHighs[i] !== null && rawHighs[i] !== undefined &&
+            rawLows[i] !== null && rawLows[i] !== undefined
+          ) {
+            validCandles.push({
+              close: rawCloses[i],
+              high: rawHighs[i],
+              low: rawLows[i]
+            });
+          }
+        }
+
+        if (validCandles.length < 30) {
+          throw new Error("Insufficient historical data from Yahoo Finance.");
+        }
+
+        // Downsample to 4H
+        const candles4H = [];
+        for (let i = validCandles.length - 1; i >= 0; i -= 4) {
+          candles4H.unshift(validCandles[i]);
+        }
+        const candles = candles4H.slice(-30);
+
+        const indicators = performTechnicalCalculations(candles, currentPrice);
+
+        finalMarketData = {
+          price: currentPrice,
+          change24h: Math.round(change24h * 100) / 100,
+          trend: indicators.trend,
+          rsi: indicators.rsi,
+          rsiStatus: indicators.rsiStatus,
+          signal: indicators.signal,
+          priceFormatted: currentPrice.toFixed(2),
+          macd: indicators.macd,
+          bb: indicators.bb,
+          levels: indicators.levels
+        };
 
       } else {
-        // Twelve Data calls (Quote + 4H Candles)
-        // Clean symbols for Twelve Data: EUR/USD is good, SPX is indices
+        // Twelve Data (Forex & Metals)
+        if (!apiKeys.twelveData) {
+          throw new Error("Twelve Data API Key is missing. Configure it in your .env file.");
+        }
+
         let symbol = asset.symbol;
         const twelveDataUrl = import.meta.env.VITE_TWELVEDATA_URL || 'https://api.twelvedata.com';
         const quoteUrl = `${twelveDataUrl}/quote?symbol=${symbol}&apikey=${apiKeys.twelveData}`;
@@ -519,26 +705,33 @@ function App() {
         const currentPrice = parseFloat(quoteRes.price || quoteRes.close);
         const change24h = parseFloat(quoteRes.percent_change || 0);
 
-        // Twelve Data returns candles most recent first. We must reverse to get oldest to newest.
         const values = candlesRes.values || [];
         const chronologicalCandles = [...values].reverse();
 
-        const indicators = performTechnicalCalculations(chronologicalCandles, currentPrice);
+        const parsedCandles = chronologicalCandles.map(c => ({
+          close: parseFloat(c.close),
+          high: parseFloat(c.high),
+          low: parseFloat(c.low)
+        }));
 
-        // Format rules from spec: JPY pairs use 3 decimals, forex minors use 4, metals 2, crypto/indices 2
+        const indicators = performTechnicalCalculations(parsedCandles, currentPrice);
+
         let decimals = 2;
         if (symbol.includes('JPY')) decimals = 3;
         else if (asset.type === 'forex') decimals = 4;
         
-        setMarketData({
+        finalMarketData = {
           price: currentPrice,
           change24h: Math.round(change24h * 100) / 100,
           trend: indicators.trend,
           rsi: indicators.rsi,
           rsiStatus: indicators.rsiStatus,
           signal: indicators.signal,
-          priceFormatted: currentPrice.toFixed(decimals)
-        });
+          priceFormatted: currentPrice.toFixed(decimals),
+          macd: indicators.macd,
+          bb: indicators.bb,
+          levels: indicators.levels
+        };
       }
 
       // 8.2 Fetch Economic Events & News in Parallel if Finnhub Key exists
@@ -546,16 +739,15 @@ function App() {
         const watchCurrencies = getWatchCurrencies(asset);
         
         const finnhubUrl = import.meta.env.VITE_FINNHUB_URL || 'https://finnhub.io/api/v1';
-        // News Endpoint Selection (Forex category vs index tickers)
         let newsUrl = `${finnhubUrl}/news?category=forex&token=${apiKeys.finnhub}`;
+        
         if (asset.type === 'indices') {
-          // Map index to popular tracking ETF symbol for company-news
           const trackingMap = {
-            'SPX': 'SPY',
-            'IXIC': 'QQQ',
-            'DJI': 'DIA',
-            'GDAXI': 'EWG',
-            'FTSE': 'EWU'
+            '^GSPC': 'SPY',
+            '^IXIC': 'QQQ',
+            '^DJI': 'DIA',
+            '^GDAXI': 'EWG',
+            '^FTSE': 'EWU'
           };
           const etfTicker = trackingMap[asset.symbol.toUpperCase()] || 'SPY';
           const toDate = new Date().toISOString().split('T')[0];
@@ -578,25 +770,31 @@ function App() {
 
         // Parse & Map news
         if (Array.isArray(newsRes)) {
-          const parsedNews = newsRes.slice(0, 5).map(item => {
+          finalNews = newsRes.slice(0, 5).map(item => {
             const date = item.datetime ? new Date(item.datetime * 1000) : new Date();
             const timeAgo = formatTimeAgo(date);
+            
+            // Absolute URL check
+            let url = item.url || "#";
+            if (url !== "#" && !/^https?:\/\//i.test(url)) {
+              url = `https://${url}`;
+            }
+            
             return {
               headline: item.headline || item.title || "Market Update",
               source: item.source || "Financial Feed",
               timeAgo,
-              url: item.url || "#"
+              url
             };
           });
-          setRecentNews(parsedNews);
         }
 
-        // Parse & Map Economic Events (Filter for High impact and currencies matching asset)
+        // Parse & Map Calendar
         const eventsList = calendarRes.economicCalendar || [];
         const now = new Date();
         const next24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
-        const filteredEvents = eventsList
+        finalEvents = eventsList
           .filter(e => {
             const eventDate = new Date(e.time);
             const isFuture = eventDate > now && eventDate <= next24h;
@@ -618,12 +816,22 @@ function App() {
               description: `Expected actual: ${e.actual || 'TBD'}, previous: ${e.prev || 'N/A'}`
             };
           });
-
-        setUpcomingEvents(filteredEvents);
-      } else {
-        // Mock news or no keys warnings
-        console.log("Finnhub Key missing, skipping news and calendar fetch.");
       }
+
+      // Set State
+      setMarketData(finalMarketData);
+      setRecentNews(finalNews);
+      setUpcomingEvents(finalEvents);
+
+      // Save to 1-minute client cache
+      cacheRef.current.set(asset.symbol, {
+        timestamp: Date.now(),
+        data: {
+          marketData: finalMarketData,
+          recentNews: finalNews,
+          upcomingEvents: finalEvents
+        }
+      });
 
     } catch (err) {
       setError(err.message || 'Error fetching market data from servers');
@@ -690,13 +898,8 @@ function App() {
     setLoadingVerdict(true);
     setError(null);
     try {
-      if (demoMode) {
-        await simulateVerdict();
-        return;
-      }
-
       if (!apiKeys.groq) {
-        throw new Error("Groq API Key is missing. Fill it in the Settings panel.");
+        throw new Error("Groq API Key is missing. Please configure VITE_GROQ_API_KEY in your .env or production environment settings.");
       }
 
       // Compile technical context
@@ -835,113 +1038,6 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
     }
   };
 
-  // --- 10. MOCK SIMULATORS FOR DEMO MODE ---
-  const simulateMarketData = async (asset) => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // Choose price depending on symbol
-    let mockPrice = 1.0845;
-    let change = 0.45;
-    if (asset.type === 'crypto') {
-      mockPrice = asset.symbol === 'bitcoin' ? 68430.50 : (asset.symbol === 'ethereum' ? 3512.20 : 145.60);
-      change = -2.15;
-    } else if (asset.symbol.includes('JPY')) {
-      mockPrice = 156.88;
-      change = 0.82;
-    } else if (asset.symbol.includes('XAU')) {
-      mockPrice = 2324.50;
-      change = 1.12;
-    } else if (asset.type === 'indices') {
-      mockPrice = asset.symbol === 'SPX' ? 5430.25 : (asset.symbol === 'IXIC' ? 17750.40 : 38900.00);
-      change = 0.33;
-    }
-
-    setMarketData({
-      price: mockPrice,
-      change24h: change,
-      trend: change >= 0 ? 'UPTREND' : 'DOWNTREND',
-      rsi: change >= 0 ? 64.2 : 28.5,
-      rsiStatus: change >= 0 ? 'Neutral' : 'Oversold',
-      signal: change >= 0 
-        ? 'LONG SIGNAL: Uptrend confirmed. Price above SMA20 & RSI neutral. Conditions favour BUY/LONG.' 
-        : 'WAIT — Downtrend present but RSI is Oversold (Bounce risk, monitor for better entry)',
-      priceFormatted: mockPrice.toFixed(asset.symbol.includes('JPY') ? 3 : asset.type === 'forex' ? 4 : 2)
-    });
-
-    setUpcomingEvents([
-      {
-        event: 'US Federal Funds Rate Decision',
-        country: 'USD',
-        timeUntil: '4h 15m',
-        impact: 'High',
-        description: 'Interest rate press conference. Heightened USD volatility.'
-      }
-    ]);
-
-    setRecentNews([
-      {
-        headline: 'Markets wait in anticipation for Federal Reserve FOMC conference updates',
-        source: 'Forex Insight',
-        timeAgo: '12 mins ago',
-        url: '#'
-      },
-      {
-        headline: 'Gold technical levels steady above $2,300 amid yields drop',
-        source: 'Finnhub News',
-        timeAgo: '2 hours ago',
-        url: '#'
-      },
-      {
-        headline: 'Crypto majors trade sideways ahead of macro liquidity changes',
-        source: 'Coingecko Pulse',
-        timeAgo: '4 hours ago',
-        url: '#'
-      }
-    ]);
-  };
-
-  const simulateVerdict = async () => {
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Base simulated verdict on answers
-    const entryReason = checklistAnswers[0];
-    const riskPercentage = checklistAnswers[6];
-    const triggerNow = checklistAnswers[4];
-    
-    let verdict = 'PROCEED WITH CAUTION';
-    let observation = 'The trade direction aligns with the overall trend, and sizing is kept safe. However, upcoming economic releases demand tight stop placements.';
-    let redFlags = [];
-    let watch = 'Wait for news consolidation before moving position to break-even.';
-
-    if (riskPercentage === 'More than 5%' || riskPercentage === '3-5%') {
-      verdict = 'NO-GO';
-      redFlags.push('High Account Risk Sizing: Risking over 3% on a single position invite ruin.');
-    }
-    if (triggerNow === 'Bored/FOMO' || triggerNow === 'Recovering a loss') {
-      verdict = 'NO-GO';
-      redFlags.push('Impulsive Execution Trigger: Boredom, FOMO, and revenge trading bypass strict setups.');
-    }
-    if (entryReason === 'Just looks good') {
-      verdict = 'PROCEED WITH CAUTION';
-      redFlags.push('Weak technical justification: Entering a position on a whim lack setup confirmation.');
-    }
-
-    if (redFlags.length === 0) {
-      verdict = 'GO';
-      observation = 'Excellent trade execution plan. Clear entry reason, aligned with overall trend structure, tight risk sizing, and clear price stops.';
-      redFlags = ['None'];
-      watch = 'Execute at designated trigger level. Stick to original target levels.';
-    }
-
-    setAiVerdict({
-      verdict,
-      observation,
-      redFlags,
-      whatToWatch: watch
-    });
-  };
-
   const resetTradeState = () => {
     setTradeDirection(null);
     setAiVerdict(null);
@@ -967,7 +1063,7 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
 
   // --- 11. RENDERING THE WEB APPLICATION ---
   return (
-    <div style={styles.appContainer}>
+    <div className="app-container">
       
       {/* HEADER SECTION */}
       <header style={styles.header}>
@@ -982,33 +1078,18 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
         </div>
         
         <div style={styles.headerControls}>
-          <button 
-            onClick={() => setDemoMode(!demoMode)} 
-            style={{
-              ...styles.demoBtn,
-              borderColor: demoMode ? 'var(--color-blue)' : 'var(--border-color)',
-              color: demoMode ? 'var(--color-blue)' : 'var(--text-secondary)'
-            }}
-          >
-            <span style={{
-              ...styles.indicatorDot,
-              backgroundColor: demoMode ? 'var(--color-blue)' : 'var(--text-muted)'
-            }} />
-            Demo Mode: {demoMode ? 'ON' : 'OFF'}
-          </button>
-          
           <span style={styles.versionTag}>v1.0.0</span>
         </div>
       </header>
 
       {/* CORE CONTENT LAYOUT */}
-      <main style={styles.mainLayout}>
+      <main className="main-layout">
         
         {/* Left Column: Asset Selection & Technical Dashboard */}
-        <section style={styles.primaryColumn}>
+        <section className="primary-column">
           
           {/* SEARCH AND QUICK SELECTOR CARD */}
-          <div style={styles.card}>
+          <div className="card">
             <div style={styles.searchContainer}>
               <Search size={18} style={styles.searchIcon} />
               <input 
@@ -1059,7 +1140,7 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
             </div>
 
             {/* Quick selector grid */}
-            <div style={styles.assetsGrid}>
+            <div className="assets-grid">
               {quickAssets[activeCategory].map(asset => (
                 <button
                   key={asset.symbol}
@@ -1082,7 +1163,7 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
             <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               
               {/* PRICE CARD */}
-              <div style={styles.card}>
+              <div className="card">
                 {loadingData ? (
                   <div style={styles.loadingContainer}>
                     <RefreshCw size={24} className="spin" style={{ animation: 'spin 1.5s linear infinite' }} />
@@ -1124,7 +1205,7 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
                     )}
 
                     {/* Indicators Grid */}
-                    <div style={styles.indicatorsGrid}>
+                    <div className="indicators-grid">
                       <div style={styles.indicatorCell}>
                         <span style={styles.indicatorLabel}>Trend (4H SMA20)</span>
                         <span style={{
@@ -1149,6 +1230,43 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
                         </div>
                       </div>
                     </div>
+
+                    {/* Advanced Technical Indicators (MACD, Bollinger Bands, Support/Resistance) */}
+                    {marketData.macd && (
+                      <div className="advanced-grid">
+                        <div style={styles.advancedCell}>
+                          <span style={styles.advancedLabel}>MACD (12/26/9)</span>
+                          <div style={styles.advancedValGroup}>
+                            <span style={{ fontSize: '13px', fontWeight: '600' }}>Line: {marketData.macd.line}</span>
+                            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)' }}>Sig: {marketData.macd.signal}</span>
+                            <span style={{ 
+                              fontSize: '13px', 
+                              fontWeight: '700', 
+                              color: parseFloat(marketData.macd.hist) >= 0 ? 'var(--color-green)' : 'var(--color-red)' 
+                            }}>
+                              Hist: {parseFloat(marketData.macd.hist) > 0 ? '+' : ''}{marketData.macd.hist}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div style={styles.advancedCell}>
+                          <span style={styles.advancedLabel}>Bollinger Bands (20, 2)</span>
+                          <div style={styles.advancedValGroup}>
+                            <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>L: {marketData.bb.lower}</span>
+                            <span style={{ fontSize: '13px', fontWeight: '700' }}>M: {marketData.bb.middle}</span>
+                            <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>U: {marketData.bb.upper}</span>
+                          </div>
+                        </div>
+
+                        <div style={styles.advancedCell}>
+                          <span style={styles.advancedLabel}>S/R Ranges (30-Candle)</span>
+                          <div style={styles.advancedValGroup}>
+                            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--color-green)' }}>Sup: {marketData.levels.support}</span>
+                            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--color-red)' }}>Res: {marketData.levels.resistance}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Technical Signal Plain language block */}
                     <div style={styles.signalCard}>
@@ -1252,9 +1370,9 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
 
         {/* Right Column: News Feed & Economic Events Calendar */}
         {selectedAsset && (
-          <section style={styles.secondaryColumn} className="animate-fade-in">
+          <section className="secondary-column animate-fade-in">
             {/* ECONOMIC CALENDAR CARD */}
-            <div style={styles.card}>
+            <div className="card">
               <h3 style={styles.sectionHeading}>Economic Calendar</h3>
               {upcomingEvents.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
@@ -1284,14 +1402,14 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
             </div>
 
             {/* NEWS CALENDAR FEED */}
-            <div style={styles.card}>
+            <div className="card">
               <h3 style={styles.sectionHeading}>
                 {selectedAsset.type === 'crypto' ? 'Crypto Pulse' : 'Market News'}
               </h3>
               {recentNews.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '12px' }}>
                   {recentNews.map((n, idx) => (
-                    <a key={idx} href={n.url} target="_blank" rel="noreferrer" style={styles.newsLinkCard}>
+                    <a key={idx} href={n.url} target="_blank" rel="noopener noreferrer" style={styles.newsLinkCard}>
                       <div style={styles.newsMeta}>
                         <span>{n.source}</span>
                         <span>•</span>
@@ -1316,7 +1434,7 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
       {/* SEQUENTIAL PRE-TRADE CHECKLIST OVERLAY MODAL */}
       {checklistOpen && (
         <div style={styles.modalOverlay}>
-          <div style={styles.modalContent} className="animate-scale-in">
+          <div className="modal-content animate-scale-in">
             <div style={styles.modalHeader}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <UserCheck size={18} color="var(--color-green)" />
