@@ -1257,34 +1257,21 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
     <div className="app-container">
       
       {/* HEADER SECTION */}
-      <header style={styles.header}>
-        <div style={styles.logoGroup}>
-          <div style={styles.logoIcon}>
+      <header className="app-header">
+        <div className="logo-group">
+          <div className="logo-icon">
             <Cpu size={18} color="var(--color-green)" />
           </div>
           <div>
-            <h1 style={styles.appTitle}>BetaTrader</h1>
-            <p style={styles.appSubtitle}>Personal Decision Support Terminal</p>
+            <h1 className="app-title">BetaTrader</h1>
+            <p className="app-subtitle">Personal Decision Support Terminal</p>
           </div>
         </div>
         
-        <div style={styles.headerControls}>
+        <div className="header-controls">
           <button
             onClick={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')}
-            style={{
-              backgroundColor: 'var(--bg-secondary)',
-              border: '1px solid var(--border-color)',
-              color: 'var(--text-primary)',
-              width: '36px',
-              height: '36px',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              transition: 'var(--transition-fast)',
-              marginRight: '8px'
-            }}
+            className="theme-toggle-btn"
             title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           >
             {theme === 'dark' ? (
@@ -1296,29 +1283,14 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
 
           <button
             onClick={handleLogout}
-            style={{
-              backgroundColor: 'transparent',
-              border: '1px solid var(--border-color)',
-              color: 'var(--color-red)',
-              borderRadius: '8px',
-              padding: '0 12px',
-              height: '36px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              cursor: 'pointer',
-              fontSize: '12px',
-              fontWeight: '700',
-              transition: 'var(--transition-fast)',
-              marginRight: '8px'
-            }}
+            className="logout-btn"
             title={`Logged in as ${user.email}. Click to logout.`}
           >
             <LogOut size={14} />
-            <span style={{ fontSize: '12px', fontWeight: '700' }}>Logout</span>
+            <span>Logout</span>
           </button>
 
-          <span style={styles.versionTag}>v1.0.0</span>
+          <span className="version-tag">v1.0.0</span>
         </div>
       </header>
 
@@ -1375,19 +1347,19 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
           
           {/* SEARCH AND QUICK SELECTOR CARD */}
           <div className="card">
-            <div style={styles.searchContainer}>
-              <Search size={18} style={styles.searchIcon} />
+            <div className="search-container">
+              <Search size={18} className="search-icon" />
               <input 
                 type="text" 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search symbol (e.g. EUR/USD, BTC, Gold)..." 
-                style={styles.searchBar}
+                className="search-bar"
               />
               
               {/* Autocomplete Dropdown List */}
               {searchResults.length > 0 && (
-                <div style={styles.dropdown}>
+                <div className="search-dropdown">
                   {searchResults.map((item, idx) => (
                     <button
                       key={idx}
@@ -1396,11 +1368,11 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
                         setSearchQuery('');
                         setSearchResults([]);
                       }}
-                      style={styles.dropdownItem}
+                      className="dropdown-item"
                     >
-                      <span style={styles.dropdownSymbol}>{item.symbol}</span>
-                      <span style={styles.dropdownName}>{item.name}</span>
-                      <span style={styles.dropdownTag}>{item.type.toUpperCase()}</span>
+                      <span className="dropdown-symbol">{item.symbol}</span>
+                      <span className="dropdown-name">{item.name}</span>
+                      <span className="dropdown-tag">{item.type.toUpperCase()}</span>
                     </button>
                   ))}
                 </div>
@@ -1426,14 +1398,10 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
                 <button
                   key={asset.symbol}
                   onClick={() => setSelectedAsset({ ...asset, type: activeCategory })}
-                  style={{
-                    ...styles.assetBtn,
-                    borderColor: selectedAsset?.symbol === asset.symbol ? 'var(--color-green)' : 'var(--border-color)',
-                    backgroundColor: selectedAsset?.symbol === asset.symbol ? 'var(--bg-tertiary)' : 'transparent'
-                  }}
+                  className={`asset-btn ${selectedAsset?.symbol === asset.symbol ? 'selected' : ''}`}
                 >
-                  <span style={styles.assetSymbol}>{asset.symbol}</span>
-                  <span style={styles.assetName}>{asset.name.split(' - ')[1]}</span>
+                  <span className="asset-symbol">{asset.symbol}</span>
+                  <span className="asset-name">{asset.name.split(' - ')[1]}</span>
                 </button>
               ))}
             </div>
@@ -1453,13 +1421,13 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
                 ) : marketData ? (
                   <div>
                     {/* Header: Title + Price info */}
-                    <div style={styles.priceHeader}>
+                    <div className="price-header">
                       <div>
-                        <h2 style={styles.priceSymbol}>{selectedAsset.symbol.toUpperCase()}</h2>
-                        <p style={styles.priceName}>{selectedAsset.name}</p>
+                        <h2 className="price-symbol">{selectedAsset.symbol.toUpperCase()}</h2>
+                        <p className="price-name">{selectedAsset.name}</p>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <span style={styles.currentPrice}>${marketData.priceFormatted}</span>
+                        <span className="current-price bloomberg-price">${marketData.priceFormatted}</span>
                         <div style={{
                           ...styles.changeBadge,
                           color: marketData.change24h >= 0 ? 'var(--color-green)' : 'var(--color-red)'
@@ -1471,15 +1439,15 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
 
                     {/* Warning Banner (Upcoming news impact within 24h) */}
                     {upcomingEvents.length > 0 && !dismissedWarning && (
-                      <div style={styles.warningBanner}>
+                      <div className="warning-banner">
                         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                           <AlertTriangle size={18} color="var(--color-amber)" />
                           <div>
-                            <span style={styles.warningTag}>⚠️ HIGH IMPACT EVENT IN {upcomingEvents[0].timeUntil.toUpperCase()}</span>
-                            <p style={styles.warningDetail}>{upcomingEvents[0].event}</p>
+                            <span className="warning-tag">⚠️ HIGH IMPACT EVENT IN {upcomingEvents[0].timeUntil.toUpperCase()}</span>
+                            <p className="warning-detail">{upcomingEvents[0].event}</p>
                           </div>
                         </div>
-                        <button onClick={() => setDismissedWarning(true)} style={styles.warningDismiss}>
+                        <button onClick={() => setDismissedWarning(true)} className="warning-dismiss">
                           <X size={16} />
                         </button>
                       </div>
@@ -1487,21 +1455,19 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
 
                     {/* Indicators Grid */}
                     <div className="indicators-grid">
-                      <div style={styles.indicatorCell}>
-                        <span style={styles.indicatorLabel}>Trend (4H SMA20)</span>
-                        <span style={{
-                          ...styles.indicatorVal,
+                      <div className="indicator-cell">
+                        <span className="indicator-label">Trend (4H SMA20)</span>
+                        <span className="indicator-val" style={{
                           color: marketData.trend === 'UPTREND' ? 'var(--color-green)' : marketData.trend === 'DOWNTREND' ? 'var(--color-red)' : 'var(--text-secondary)'
                         }}>
                           {marketData.trend}
                         </span>
                       </div>
-                      <div style={styles.indicatorCell}>
-                        <span style={styles.indicatorLabel}>RSI (14-Period)</span>
+                      <div className="indicator-cell">
+                        <span className="indicator-label">RSI (14-Period)</span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={styles.indicatorVal}>{marketData.rsi}</span>
-                          <span style={{
-                            ...styles.rsiLabel,
+                          <span className="indicator-val">{marketData.rsi}</span>
+                          <span className="rsi-label" style={{
                             backgroundColor: marketData.rsiStatus === 'Overbought' ? 'var(--color-red-glow)' : marketData.rsiStatus === 'Oversold' ? 'var(--color-green-glow)' : 'transparent',
                             color: marketData.rsiStatus === 'Overbought' ? 'var(--color-red)' : marketData.rsiStatus === 'Oversold' ? 'var(--color-green)' : 'var(--text-secondary)',
                             borderColor: marketData.rsiStatus !== 'Neutral' ? 'currentColor' : 'transparent'
@@ -1515,12 +1481,12 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
                     {/* Advanced Technical Indicators (MACD, Bollinger Bands, Support/Resistance) */}
                     {marketData.macd && (
                       <div className="advanced-grid">
-                        <div style={styles.advancedCell}>
-                          <span style={styles.advancedLabel}>MACD (12/26/9)</span>
-                          <div style={styles.advancedValGroup}>
-                            <span style={{ fontSize: '13px', fontWeight: '600' }}>Line: {marketData.macd.line}</span>
-                            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)' }}>Sig: {marketData.macd.signal}</span>
-                            <span style={{ 
+                        <div className="advanced-cell">
+                          <span className="advanced-label">MACD (12/26/9)</span>
+                          <div className="advanced-val-group">
+                            <span className="val" style={{ fontSize: '13px', fontWeight: '600' }}>Line: {marketData.macd.line}</span>
+                            <span className="val" style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)' }}>Sig: {marketData.macd.signal}</span>
+                            <span className="val" style={{ 
                               fontSize: '13px', 
                               fontWeight: '700', 
                               color: parseFloat(marketData.macd.hist) >= 0 ? 'var(--color-green)' : 'var(--color-red)' 
@@ -1530,50 +1496,42 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
                           </div>
                         </div>
                         
-                        <div style={styles.advancedCell}>
-                          <span style={styles.advancedLabel}>Bollinger Bands (20, 2)</span>
-                          <div style={styles.advancedValGroup}>
-                            <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>L: {marketData.bb.lower}</span>
-                            <span style={{ fontSize: '13px', fontWeight: '700' }}>M: {marketData.bb.middle}</span>
-                            <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>U: {marketData.bb.upper}</span>
+                        <div className="advanced-cell">
+                          <span className="advanced-label">Bollinger Bands (20, 2)</span>
+                          <div className="advanced-val-group">
+                            <span className="val" style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>L: {marketData.bb.lower}</span>
+                            <span className="val" style={{ fontSize: '13px', fontWeight: '700' }}>M: {marketData.bb.middle}</span>
+                            <span className="val" style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>U: {marketData.bb.upper}</span>
                           </div>
                         </div>
 
-                        <div style={styles.advancedCell}>
-                          <span style={styles.advancedLabel}>S/R Ranges (30-Candle)</span>
-                          <div style={styles.advancedValGroup}>
-                            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--color-green)' }}>Sup: {marketData.levels.support}</span>
-                            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--color-red)' }}>Res: {marketData.levels.resistance}</span>
+                        <div className="advanced-cell">
+                          <span className="advanced-label">S/R Ranges (30-Candle)</span>
+                          <div className="advanced-val-group">
+                            <span className="val" style={{ fontSize: '13px', fontWeight: '600', color: 'var(--color-green)' }}>Sup: {marketData.levels.support}</span>
+                            <span className="val" style={{ fontSize: '13px', fontWeight: '600', color: 'var(--color-red)' }}>Res: {marketData.levels.resistance}</span>
                           </div>
                         </div>
                       </div>
                     )}
 
                     {/* Technical Signal Plain language block */}
-                    <div style={styles.signalCard}>
-                      <div style={styles.signalTitle}>TECHNICAL SIGNAL</div>
-                      <p style={styles.signalText}>{marketData.signal}</p>
+                    <div className="signal-card">
+                      <div className="signal-title">TECHNICAL SIGNAL</div>
+                      <p className="signal-text">{marketData.signal}</p>
                     </div>
 
                     {/* Trade Direction Selection */}
-                    <div style={styles.tradeControls}>
+                    <div className="trade-controls">
                       <button
                         onClick={() => { setTradeDirection('BUY'); setAiVerdict(null); }}
-                        style={{
-                          ...styles.buyBtn,
-                          backgroundColor: tradeDirection === 'BUY' ? 'var(--color-green)' : 'transparent',
-                          color: tradeDirection === 'BUY' ? 'var(--bg-primary)' : 'var(--color-green)'
-                        }}
+                        className={`buy-btn ${tradeDirection === 'BUY' ? 'active' : ''}`}
                       >
                         <TrendingUp size={16} /> BUY / LONG
                       </button>
                       <button
                         onClick={() => { setTradeDirection('SELL'); setAiVerdict(null); }}
-                        style={{
-                          ...styles.sellBtn,
-                          backgroundColor: tradeDirection === 'SELL' ? 'var(--color-red)' : 'transparent',
-                          color: tradeDirection === 'SELL' ? 'var(--bg-primary)' : 'var(--color-red)'
-                        }}
+                        className={`sell-btn ${tradeDirection === 'SELL' ? 'active' : ''}`}
                       >
                         <TrendingDown size={16} /> SELL / SHORT
                       </button>
@@ -1582,7 +1540,7 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
                     {tradeDirection && (
                       <button 
                         onClick={() => { setChecklistStep(0); setChecklistAnswers(Array(7).fill(null)); setChecklistOpen(true); }}
-                        style={styles.checklistTriggerBtn}
+                        className="checklist-trigger-btn"
                       >
                         <Play size={14} style={{ marginRight: '6px' }} /> Run Pre-Trade Checklist
                       </button>
@@ -1596,11 +1554,7 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
 
               {/* DYNAMIC PSYCHOLOGICAL AI VERDICT */}
               {aiVerdict && (
-                <div style={{
-                  ...styles.card,
-                  ...styles.verdictCard,
-                  borderColor: aiVerdict.verdict === 'GO' ? 'var(--color-green)' : aiVerdict.verdict === 'NO-GO' ? 'var(--color-red)' : 'var(--color-amber)'
-                }} className="animate-fade-in">
+                <div className={`card verdict-card verdict-${aiVerdict.verdict.toLowerCase().replace(/ /g, '-')} animate-scale-in`}>
                   <div style={styles.verdictHeader}>
                     <span style={styles.verdictBadge}>PSYCHOLOGICAL HEDGE VERDICT</span>
                     <h3 style={{
@@ -1731,28 +1685,24 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
           <section className="secondary-column animate-fade-in">
             {/* ECONOMIC CALENDAR CARD */}
             <div className="card">
-              <h3 style={styles.sectionHeading}>Economic Calendar</h3>
+              <h3 className="section-heading">Economic Calendar</h3>
               {upcomingEvents.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
                   {upcomingEvents.map((e, index) => (
-                    <div key={index} style={styles.eventCard}>
-                      <div style={styles.eventHeader}>
-                        <span style={styles.eventCountry}>{e.country}</span>
-                        <span style={{
-                          ...styles.eventImpact,
-                          backgroundColor: e.impact === 'High' ? 'var(--color-red-glow)' : 'var(--color-amber-glow)',
-                          color: e.impact === 'High' ? 'var(--color-red)' : 'var(--color-amber)'
-                        }}>
+                    <div key={index} className="event-card">
+                      <div className="event-header">
+                        <span className="event-country">{e.country}</span>
+                        <span className={`event-impact-badge impact-${e.impact.toLowerCase()}`}>
                           {e.impact} Impact
                         </span>
                       </div>
-                      <h4 style={styles.eventName}>{e.event}</h4>
-                      <div style={styles.eventTime}>In {e.timeUntil}</div>
+                      <h4 className="event-name">{e.event}</h4>
+                      <div className="event-time">In {e.timeUntil}</div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div style={styles.noEventsBox}>
+                <div className="no-events-box">
                   <CheckCircle size={16} color="var(--color-green)" style={{ marginRight: '6px' }} />
                   <span>No major events scheduled in the next 24 hours.</span>
                 </div>
@@ -1761,20 +1711,20 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
 
             {/* NEWS CALENDAR FEED */}
             <div className="card">
-              <h3 style={styles.sectionHeading}>
+              <h3 className="section-heading">
                 {selectedAsset.type === 'crypto' ? 'Crypto Pulse' : 'Market News'}
               </h3>
               {recentNews.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '12px' }}>
                   {recentNews.map((n, idx) => (
-                    <a key={idx} href={n.url} target="_blank" rel="noopener noreferrer" style={styles.newsLinkCard}>
-                      <div style={styles.newsMeta}>
+                    <a key={idx} href={n.url} target="_blank" rel="noopener noreferrer" className="news-link-card">
+                      <div className="news-meta">
                         <span>{n.source}</span>
                         <span>•</span>
                         <span>{n.timeAgo}</span>
                       </div>
-                      <h4 style={styles.newsHeadline}>{n.headline}</h4>
-                      <div style={styles.newsHoverIndicator}>
+                      <h4 className="news-headline">{n.headline}</h4>
+                      <div className="news-hover-indicator">
                         Open Article <ExternalLink size={12} style={{ marginLeft: '4px' }} />
                       </div>
                     </a>
@@ -1791,14 +1741,14 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
 
       {/* SEQUENTIAL PRE-TRADE CHECKLIST OVERLAY MODAL */}
       {checklistOpen && (
-        <div style={styles.modalOverlay}>
+        <div className="modal-overlay">
           <div className="modal-content animate-scale-in">
-            <div style={styles.modalHeader}>
+            <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <UserCheck size={18} color="var(--color-green)" />
-                <h3 style={styles.modalTitle}>Pre-Trade Checklist</h3>
+                <h3 className="modal-title">Pre-Trade Checklist</h3>
               </div>
-              <button onClick={() => setChecklistOpen(false)} style={styles.closeBtn}>
+              <button onClick={() => setChecklistOpen(false)} className="close-btn">
                 <X size={18} />
               </button>
             </div>
@@ -1811,42 +1761,38 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
               }} />
             </div>
 
-            <div style={styles.modalBody}>
+            <div className="modal-body">
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14px' }}>
-                <span style={styles.stepCounter}>Question {checklistStep + 1} of 7</span>
+                <span className="step-counter">Question {checklistStep + 1} of 7</span>
                 <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                   Selected: {checklistAnswers.filter(x => x !== null).length} / 7
                 </span>
               </div>
               
-              <h2 style={styles.checklistQuestion}>
+              <h2 className="checklist-question">
                 {checklistQuestions[checklistStep].question}
               </h2>
               
-              <div style={styles.optionsContainer}>
+              <div className="options-container">
                 {checklistQuestions[checklistStep].options.map((option, idx) => (
                   <button
                     key={idx}
                     onClick={() => handleAnswerSelect(idx)}
-                    style={{
-                      ...styles.optionBtn,
-                      borderColor: checklistAnswers[checklistStep] === option ? 'var(--color-green)' : 'var(--border-color)',
-                      backgroundColor: checklistAnswers[checklistStep] === option ? 'var(--color-green-glow)' : 'transparent'
-                    }}
+                    className={`option-btn ${checklistAnswers[checklistStep] === option ? 'selected' : ''}`}
                   >
-                    <span style={styles.optionNum}>{idx + 1}</span>
+                    <span className="option-num">{idx + 1}</span>
                     <span>{option}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            <div style={styles.modalFooter}>
+            <div className="modal-footer">
               <button 
                 onClick={handlePreviousStep} 
                 disabled={checklistStep === 0}
+                className="secondary-btn"
                 style={{
-                  ...styles.secondaryBtn,
                   opacity: checklistStep === 0 ? 0.4 : 1
                 }}
               >
@@ -1856,7 +1802,7 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
               {checklistStep === 6 && checklistAnswers[6] !== null ? (
                 <button 
                   onClick={getAiVerdict} 
-                  style={styles.primaryBtn}
+                  className="primary-btn"
                   disabled={loadingVerdict}
                 >
                   {loadingVerdict ? 'Compiling Verdict...' : 'Get Verdict'}
@@ -1873,8 +1819,8 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
 
       {/* AI COMPILING / REASONING LOADING DIALOG */}
       {loadingVerdict && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.aiCompilingBox}>
+        <div className="modal-overlay">
+          <div className="ai-compiling-box">
             <Cpu size={32} className="pulse spin" style={{ color: 'var(--color-green)', animation: 'pulse 1.5s infinite' }} />
             <h3 style={{ marginTop: '16px' }}>Consulting Risk Engine</h3>
             <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginTop: '8px' }}>
