@@ -599,7 +599,7 @@ function JournalTab({ user, prefilledData, clearPrefilledData, flatSymbolsList =
     <div style={ds.journalContainer} className="animate-fade-in">
 
       {/* Navigation Headers */}
-      <div style={ds.subTabsNav}>
+      <div className="sub-tabs-nav">
         <button
           onClick={() => setActiveSubTab('my-trades')}
           style={{
@@ -636,7 +636,7 @@ function JournalTab({ user, prefilledData, clearPrefilledData, flatSymbolsList =
 
       {/* 1. LOG TRADE FORM */}
       {activeSubTab === 'log-trade' && (
-        <form onSubmit={handleLogTradeSubmit} style={ds.formCard} className="animate-scale-in">
+        <form onSubmit={handleLogTradeSubmit} className="card animate-scale-in" style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
           <h3 style={ds.cardTitle}>Record Trade Log Entry</h3>
           
           {formError && (
@@ -900,9 +900,9 @@ function JournalTab({ user, prefilledData, clearPrefilledData, flatSymbolsList =
           </div>
 
           {/* Auto calculations display */}
-          <div style={ds.calculationsBox}>
+          <div className="calculations-box">
             <span style={ds.calculationsTitle}>Live Calculations</span>
-            <div style={ds.calculationsGrid}>
+            <div className="calculations-grid">
               <div style={ds.calcItem}>
                 <span style={ds.calcLabel}>Pips</span>
                 <span style={{
@@ -945,7 +945,7 @@ function JournalTab({ user, prefilledData, clearPrefilledData, flatSymbolsList =
         <div style={ds.tradesSection}>
           
           {/* Filters Bar */}
-          <div style={ds.filterCard}>
+          <div className="card">
             <div style={ds.filterHeader}>
               <Filter size={16} />
               <h4 style={{ fontSize: '13px', fontWeight: '700' }}>Filter Journal Logs</h4>
@@ -1135,11 +1135,11 @@ function JournalTab({ user, prefilledData, clearPrefilledData, flatSymbolsList =
 
                     {/* Expanded Content Drawer */}
                     {isExpanded && (
-                      <div style={ds.expandedContent} className="animate-fade-in">
+                      <div className="expanded-content animate-fade-in">
                         <div className="journal-expanded-grid">
                           <div style={ds.expandedDetailCol}>
                             <h4 style={ds.subSectionHeading}>Trade Parameters</h4>
-                            <div style={ds.detailGrid}>
+                            <div className="detail-grid">
                               <div style={ds.detailCell}>
                                 <span>Lot Size:</span> <strong>{trade.lot_size} lots</strong>
                               </div>
@@ -1240,7 +1240,7 @@ function JournalTab({ user, prefilledData, clearPrefilledData, flatSymbolsList =
           ) : (
             <>
               {/* Aggregated Numbers Grid */}
-              <div style={ds.statsGrid}>
+              <div className="stats-grid">
                 <div style={ds.statCell}>
                   <span style={ds.label}>Total Closed Trades</span>
                   <span style={ds.statVal}>{totalClosedTrades}</span>

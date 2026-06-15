@@ -1102,7 +1102,7 @@ export default function BacktestTab() {
       </div>
 
       {/* ── SETUP CONFIGURATION PANEL ── */}
-      <div style={s.panel}>
+      <div className="card">
         <div style={s.sectionTitle}>Setup Configuration</div>
 
         {/* Row 1: Asset, Timeframe, Direction, Look-ahead */}
@@ -1440,12 +1440,12 @@ export default function BacktestTab() {
           </div>
 
           {/* SUMMARY STATS */}
-          <div style={s.panel}>
+          <div className="card">
             <div style={s.sectionTitle}>Summary Statistics</div>
             <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
               📅 Data range: {results.dateRange}
             </div>
-            <div style={s.statGrid}>
+            <div className="stat-grid">
               <div style={s.statCell}>
                 <span style={s.statLabel}>Total Setups</span>
                 <span style={s.statVal}>{results.totalSetups}</span>
@@ -1507,7 +1507,7 @@ export default function BacktestTab() {
 
           {/* BAR CHART */}
           {chartData.length > 0 && (
-            <div style={s.panel}>
+            <div className="card">
               <div style={s.sectionTitle}>Outcome Distribution (by pip range)</div>
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={chartData} margin={{ top: 4, right: 10, left: -10, bottom: 4 }}>
@@ -1540,7 +1540,7 @@ export default function BacktestTab() {
           )}
 
           {/* INDIVIDUAL OCCURRENCES */}
-          <div style={s.panel}>
+          <div className="card">
             <button
               onClick={() => setExpandOccurrences(prev => !prev)}
               style={{
@@ -1608,11 +1608,10 @@ export default function BacktestTab() {
 
       {/* ── IDLE / NO RESULTS STATE ── */}
       {!results && !loading && !error && (
-        <div style={{
-          ...s.panel,
+        <div className="card" style={{
           textAlign: 'center',
           padding: '60px 20px',
-          border: '1px dashed var(--border-color)',
+          borderStyle: 'dashed',
         }}>
           <Database size={48} color="var(--text-muted)" style={{ marginBottom: '16px' }} />
           <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '8px' }}>Configure your strategy above</h3>

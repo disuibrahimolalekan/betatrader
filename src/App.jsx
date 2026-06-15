@@ -1321,14 +1321,14 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
 
       {/* V2: BACKTEST TAB */}
       {activeTab === 'backtest' && (
-        <div style={{ padding: '8px 0' }}>
+        <div className="tab-panel">
           <BacktestTab />
         </div>
       )}
 
       {/* V3: JOURNAL TAB */}
       {activeTab === 'journal' && (
-        <div style={{ padding: '8px 0' }}>
+        <div className="tab-panel">
           <JournalTab 
             user={user} 
             prefilledData={prefilledJournalData} 
