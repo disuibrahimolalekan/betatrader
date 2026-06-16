@@ -1420,4 +1420,59 @@ html.light .tab-nav button:hover {
   }
 }
 
+/* Technical Signal Card Styles */
+.signal-card {
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-primary);
+  transition: all 0.3s ease;
+}
+
+.signal-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.signal-text {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text-primary);
+}
+
+/* Dynamic status overrides matching standard theme colors */
+.signal-card.signal-long {
+  background-color: var(--color-green-glow);
+  border-color: var(--color-green);
+}
+
+.signal-card.signal-long .signal-title {
+  color: var(--color-green);
+}
+
+.signal-card.signal-short {
+  background-color: var(--color-red-glow);
+  border-color: var(--color-red);
+}
+
+.signal-card.signal-short .signal-title {
+  color: var(--color-red);
+}
+
+.signal-card.signal-wait {
+  background-color: var(--color-amber-glow);
+  border-color: var(--color-amber);
+}
+
+.signal-card.signal-wait .signal-title {
+  color: var(--color-amber);
+}
+
+
 

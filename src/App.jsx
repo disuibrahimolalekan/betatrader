@@ -1516,7 +1516,11 @@ WHAT TO WATCH: [1-2 specific notes for this trade]`;
                     )}
 
                     {/* Technical Signal Plain language block */}
-                    <div className="signal-card">
+                    <div className={`signal-card ${
+                      marketData.signal.includes('LONG SIGNAL') ? 'signal-long' :
+                      marketData.signal.includes('SHORT SIGNAL') ? 'signal-short' :
+                      marketData.signal.includes('WAIT') || marketData.signal.includes('STAY OUT') ? 'signal-wait' : ''
+                    }`}>
                       <div className="signal-title">TECHNICAL SIGNAL</div>
                       <p className="signal-text">{marketData.signal}</p>
                     </div>
